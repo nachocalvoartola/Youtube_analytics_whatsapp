@@ -1,7 +1,7 @@
 import os
 import googleapiclient.discovery
 import pandas as pd
-from twilio_rest import Client
+from twilio.rest import Client
 from config import YOUTUBE_API_KEY, TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, PHONE_NUMBER_TO, PHONE_NUMBER_FROM
 
 
