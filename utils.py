@@ -8,7 +8,7 @@ from config import YOUTUBE_API_KEY, TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, PHONE
  # Get videos in the "most popular" category for the past 24 hours
 
 def get_most_watched_videos(region, max_results):
-    youtube = googleapiclient.discovery.build('youtube', 'v3', YOUTUBE_API_KEY)
+    youtube = googleapiclient.discovery.build('youtube', 'v3', developerKey=YOUTUBE_API_KEY)
 
    
     request = youtube.videos().list(
@@ -22,6 +22,7 @@ def get_most_watched_videos(region, max_results):
 
     # Extract the title, link, viewCount, and likeCount of each video
     videos = []
+    num = 1
     for item in response['items']:
         title = item['snippet']['title']
         video_id = item['id']
@@ -29,40 +30,39 @@ def get_most_watched_videos(region, max_results):
         view_count = item['statistics']['viewCount']
         like_count = item['statistics']['likeCount']
         
-        videos.append({            
-            'title': title,
-            'url': video_url,
-            'views': view_count,
-            'likes': like_count            
-        })
-
+        videos.append([num, title, video_url, view_count, like_count])
+        num += 1
+    
+    print (videos)
     return videos
 
 #Create dataframe
 
 def create_dataframe(region, max_results):
     
-    col = ['title', 'video_url', 'views', 'likes']
-    
-    df = pd.DataFrame(get_most_watched_videos(region, max_results), columns=col)
+    col = ['Pos', 'Title', 'Video_url', 'Views', 'Likes']   
 
-    return df
+    df = pd.DataFrame(get_most_watched_videos(region, max_results), columns=col)
+    
+    return df.set_index('Pos')
 
 
 #Send Whatsapp message
 
 def send_whatsapp(data):
 
-    text = '\nMost viewed Youtube videos within 24 hours: \n\n ' + str (data[['title', 'video_url', 'views']])
+    text = '\nMost viewed Youtube videos within 24 hours: \n\n ' + str (data[['Title', 'Video_url', 'Views']])
     
-    client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+    account_sid = TWILIO_ACCOUNT_SID
+    auth_token = TWILIO_AUTH_TOKEN
+    client = Client(account_sid, auth_token)
 
     message = client.messages.create(
+        from_ = 'whatsapp:' + PHONE_NUMBER_FROM,
         body = text,
-        from_ = "whatsapp:" + PHONE_NUMBER_FROM,
-        to = "whatsapp:" + PHONE_NUMBER_TO,
-    )
+        to = 'whatsapp:' + PHONE_NUMBER_TO
+)
 
-    print(message.body)
+    print(message.sid)
 
 
